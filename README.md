@@ -19,7 +19,7 @@ An AI-powered chatbot for summarizing and interacting with multiple PDF document
 - **Frontend**: Tailwind CSS and JavaScript
 - **Backend**: Flask
 - **Database**: SQLite
-- **AI/Inference**: Groq API with LLaMA 3 70b model
+- **AI/Inference**: Ollama API and jkug3-v1 model
 - **PDF Processing**: PyPDF2
 
 ## Setup
@@ -42,8 +42,8 @@ An AI-powered chatbot for summarizing and interacting with multiple PDF document
 
 1. Clone the repository:
    ```
-   git clone https://github.com/yourusername/pdf-chat.git
-   cd pdf-chat
+   git clone https://github.com/yourusername/pdf-chat-ollama.git
+   cd pdf-chat-ollama
    ```
 
 2. Create and activate a virtual environment:
