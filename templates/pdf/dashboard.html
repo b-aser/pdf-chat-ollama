@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - PDF Chat{% endblock %}
+
+{% block content %}
+<div class="mt-6">
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold text-primary-800">Welcome, {{ current_user.username }}</h1>
+        <a href="{{ url_for('pdf.upload') }}" class="bg-primary-600 hover:bg-primary-700 text-white font-bold py-2 px-4 rounded">
+            <i class="fas fa-upload mr-2"></i> Upload PDFs
+        </a>
+    </div>
+
+    <div class="flex flex-col lg:flex-row gap-8">
+        <!-- PDFs Section -->
+        <div class="w-full lg:w-1/2">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-primary-700">Your Documents</h2>
+                    <span class="bg-primary-100 text-primary-800 rounded-full px-3 py-1 text-sm">{{ pdfs|length }} PDFs</span>
+                </div>
+                
+                {% if pdfs %}
+                    <div class="divide-y">
+                        {% for pdf in pdfs %}
+                            <div class="py-4 hover:bg-gray-50 transition-all rounded-md px-2">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <h3 class="font-medium">{{ pdf.original_filename }}</h3>
+                                        <p class="text-sm text-gray-500">Uploaded {{ pdf.upload_date.strftime('%b %d, %Y') }}</p>
+                                    </div>
+                                    <div class="flex space-x-2">
+                                        <a href="{{ url_for('pdf.view_pdf', pdf_id=pdf.id) }}" class="text-gray-600 hover:text-primary-600">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{{ url_for('chat.summarize_pdf', pdf_id=pdf.id) }}" class="text-gray-600 hover:text-primary-600">
+                                            <i class="fas fa-file-alt"></i>
+                                        </a>
+                                        <a href="{{ url_for('chat.ask_pdf_question', pdf_id=pdf.id) }}" class="text-gray-600 hover:text-primary-600">
+                                            <i class="fas fa-question-circle"></i>
+                                        </a>
+                                        <a href="{{ url_for('pdf.download_pdf', pdf_id=pdf.id) }}" class="text-gray-600 hover:text-primary-600">
+                                            <i class="fas fa-download"></i>
+                                        </a>
+                                        <form action="{{ url_for('pdf.delete_pdf', pdf_id=pdf.id) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this PDF?');">
+                                            <button type="submit" class="text-red-500 hover:text-red-700">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-8">
+                        <p class="text-gray-500 mb-4">You haven't uploaded any PDFs yet.</p>
+                        <a href="{{ url_for('pdf.upload') }}" class="text-primary-600 hover:text-primary-800">
+                            <i class="fas fa-upload mr-1"></i> Upload your first PDF
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="bg-white rounded-lg shadow-md p-6 mt-6">
+                <h2 class="text-xl font-semibold text-primary-700 mb-4">Quick Actions</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <a href="{{ url_for('pdf.upload') }}" class="bg-gray-100 hover:bg-gray-200 p-4 rounded-lg text-center">
+                        <i class="fas fa-upload text-primary-600 text-xl mb-2"></i>
+                        <p>Upload PDFs</p>
+                    </a>
+                    <a href="{{ url_for('chat.new_chat') }}" class="bg-gray-100 hover:bg-gray-200 p-4 rounded-lg text-center">
+                        <i class="fas fa-comments text-primary-600 text-xl mb-2"></i>
+                        <p>New Chat</p>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Chat Sessions Section -->
+        <div class="w-full lg:w-1/2">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-primary-700">Recent Chats</h2>
+                    <a href="{{ url_for('chat.new_chat') }}" class="text-primary-600 hover:text-primary-800">
+                        <i class="fas fa-plus-circle mr-1"></i> New Chat
+                    </a>
+                </div>
+                
+                {% if chat_sessions %}
+                    <div class="divide-y">
+                        {% for chat in chat_sessions %}
+                            <div class="py-4 hover:bg-gray-50 transition-all rounded-md px-2">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <h3 class="font-medium">{{ chat.title }}</h3>
+                                        <p class="text-sm text-gray-500">{{ chat.created_at.strftime('%b %d, %Y at %H:%M') }}</p>
+                                    </div>
+                                    <div class="flex space-x-2">
+                                        <a href="{{ url_for('chat.view_chat', chat_id=chat.id) }}" class="bg-primary-100 hover:bg-primary-200 text-primary-800 px-3 py-1 rounded">
+                                            <i class="fas fa-comments mr-1"></i> Continue
+                                        </a>
+                                        <form action="{{ url_for('chat.delete_chat', chat_id=chat.id) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this chat?');">
+                                            <button type="submit" class="text-red-500 hover:text-red-700">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-8">
+                        <p class="text-gray-500 mb-4">You haven't started any chats yet.</p>
+                        <a href="{{ url_for('chat.new_chat') }}" class="text-primary-600 hover:text-primary-800">
+                            <i class="fas fa-comments mr-1"></i> Start your first chat
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

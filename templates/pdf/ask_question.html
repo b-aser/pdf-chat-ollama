@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}Ask Question: {{ pdf.original_filename }} - PDF Chat{% endblock %}
+
+{% block content %}
+<div class="mt-6">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-primary-800">Ask a Question</h1>
+        <div class="flex space-x-3">
+            <a href="{{ url_for('pdf.view_pdf', pdf_id=pdf.id) }}" class="text-primary-600 hover:text-primary-800">
+                <i class="fas fa-file-pdf mr-1"></i> View PDF
+            </a>
+            <a href="{{ url_for('pdf.dashboard') }}" class="text-primary-600 hover:text-primary-800">
+                <i class="fas fa-arrow-left mr-1"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Form -->
+        <div class="lg:col-span-2 order-2 lg:order-1">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold text-primary-700 mb-4">Ask about "{{ pdf.original_filename }}"</h2>
+                
+                <form action="{{ url_for('chat.ask_pdf_question', pdf_id=pdf.id) }}" method="POST">
+                    <div class="mb-6">
+                        <label for="question" class="block text-gray-700 text-sm font-bold mb-2">
+                            Your Question:
+                        </label>
+                        <textarea 
+                            id="question" 
+                            name="question" 
+                            rows="4" 
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+                            placeholder="Enter your question about this document..."
+                            required
+                        ></textarea>
+                    </div>
+                    
+                    <div class="flex justify-end">
+                        <button type="submit" class="bg-primary-600 hover:bg-primary-700 text-white font-bold py-2 px-6 rounded flex items-center">
+                            <i class="fas fa-question-circle mr-2"></i> Ask Question
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-md p-6 mt-6">
+                <h2 class="text-xl font-semibold text-primary-700 mb-4">Question Examples</h2>
+                <ul class="space-y-3 text-gray-700">
+                    <li>
+                        <button class="example-question hover:text-primary-600 hover:underline cursor-pointer">
+                            <i class="fas fa-lightbulb text-yellow-500 mr-2"></i>
+                            What is the main topic of this document?
+                        </button>
+                    </li>
+                    <li>
+                        <button class="example-question hover:text-primary-600 hover:underline cursor-pointer">
+                            <i class="fas fa-lightbulb text-yellow-500 mr-2"></i>
+                            Can you summarize the key points in this PDF?
+                        </button>
+                    </li>
+                    <li>
+                        <button class="example-question hover:text-primary-600 hover:underline cursor-pointer">
+                            <i class="fas fa-lightbulb text-yellow-500 mr-2"></i>
+                            What conclusions does this document present?
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- PDF Info -->
+        <div class="lg:col-span-1 order-1 lg:order-2">
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h2 class="text-xl font-semibold text-primary-700 mb-3">About this PDF</h2>
+                <div class="flex items-center mb-4">
+                    <i class="fas fa-file-pdf text-primary-600 text-3xl mr-3"></i>
+                    <div>
+                        <div class="font-medium">{{ pdf.original_filename }}</div>
+                        <div class="text-sm text-gray-500">Uploaded {{ pdf.upload_date.strftime('%b %d, %Y') }}</div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <a href="{{ url_for('chat.summarize_pdf', pdf_id=pdf.id) }}" class="bg-primary-100 hover:bg-primary-200 text-primary-800 font-bold py-2 px-4 rounded block text-center mb-3">
+                        <i class="fas fa-file-alt mr-2"></i> View Summary
+                    </a>
+                    <form action="{{ url_for('chat.new_chat') }}" method="POST" class="w-full">
+                        <input type="hidden" name="pdf_ids" value="{{ pdf.id }}">
+                        <button type="submit" class="bg-primary-100 hover:bg-primary-200 text-primary-800 font-bold py-2 px-4 rounded w-full">
+                            <i class="fas fa-comments mr-2"></i> Chat with this PDF
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const questionInput = document.getElementById('question');
+        const exampleButtons = document.querySelectorAll('.example-question');
+        
+        exampleButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                questionInput.value = this.textContent.trim();
+                questionInput.focus();
+            });
+        });
+    });
+</script>
+{% endblock %} 

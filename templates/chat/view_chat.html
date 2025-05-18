@@ -1,0 +1,355 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ chat_session.title }} - PDF Chat{% endblock %}
+
+{% block content %}
+<div class="mt-6 h-[calc(100vh-200px)] flex flex-col">
+    <div class="flex justify-between items-center mb-4">
+        <div>
+            <h1 class="text-2xl font-bold text-primary-800">{{ chat_session.title }}</h1>
+            <div class="text-sm text-gray-500">
+                <span>{{ chat_session.created_at.strftime('%b %d, %Y at %H:%M') }}</span>
+                <span class="mx-2">•</span>
+                <span>PDFs: {{ pdfs|length }}</span>
+            </div>
+        </div>
+        <div class="flex space-x-2">
+            <a href="{{ url_for('pdf.dashboard') }}" class="bg-gray-100 hover:bg-gray-200 text-gray-800 py-2 px-4 rounded transition-all">
+                <i class="fas fa-arrow-left mr-1"></i> Back
+            </a>
+            <form action="{{ url_for('chat.delete_chat', chat_id=chat_session.id) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this chat?');">
+                <button type="submit" class="bg-red-100 hover:bg-red-200 text-red-800 py-2 px-4 rounded transition-all">
+                    <i class="fas fa-trash mr-1"></i> Delete
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- PDF Information -->
+    <div class="bg-white rounded-lg shadow-sm p-4 mb-4 border border-gray-100">
+        <h3 class="font-medium mb-2 text-gray-700"><i class="fas fa-file-pdf text-primary-600 mr-2"></i>PDFs in this Chat:</h3>
+        <div class="flex flex-wrap gap-2">
+            {% for pdf in pdfs %}
+                <div class="bg-gray-50 rounded-lg px-3 py-1.5 text-sm flex items-center border border-gray-200 hover:bg-gray-100 transition-colors">
+                    <i class="fas fa-file-pdf text-primary-600 mr-2"></i>
+                    <span>{{ pdf.original_filename }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Chat Messages -->
+    <div class="flex-grow bg-white rounded-lg shadow-md p-4 mb-4 overflow-y-auto border border-gray-100 relative" id="chat-container">
+        <div class="absolute inset-0 bg-gradient-to-b from-white via-transparent to-transparent pointer-events-none h-12 z-10"></div>
+        
+        {% if messages %}
+            <div class="flex flex-col space-y-2 w-full">
+                {% for message in messages %}
+                    <div class="flex {{ 'justify-end' if message.is_user else 'justify-start' }}">
+                        <div class="chat-message {{ 'user-message' if message.is_user else 'bot-message' }} opacity-0 animate-fade-in">
+                            <div class="message-content">
+                                {% if message.is_user %}
+                                    <div class="font-bold mb-1">You</div>
+                                    <span>{{ message.content }}</span>
+                                {% else %}
+                                    <div class="font-bold mb-1">AI</div>
+                                    <span>{{ message.content|safe }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="flex flex-col items-center justify-center h-full text-gray-500 space-y-4">
+                <div class="w-16 h-16 rounded-full bg-primary-50 flex items-center justify-center">
+                    <i class="fas fa-comments text-primary-400 text-2xl"></i>
+                </div>
+                <p>Start asking questions about your PDFs</p>
+                <p class="text-sm text-gray-400">Your conversation will appear here</p>
+                <div class="text-xs text-gray-400 mt-2">
+                    <p class="mb-1">Markdown is supported:</p>
+                    <p><code>**bold**</code> for <strong>bold</strong> text</p>
+                    <p><code>*italic*</code> for <em>italic</em> text</p>
+                    <p><code>`code`</code> for <code class="bg-gray-100 px-1 rounded">code</code></p>
+                </div>
+            </div>
+        {% endif %}
+        
+        <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-white via-white to-transparent pointer-events-none h-12 z-10"></div>
+    </div>
+
+    <!-- Message Form -->
+    <div class="bg-white rounded-lg shadow-md p-4 border border-gray-100">
+        <form id="message-form" class="flex items-center">
+            <div class="flex-grow relative">
+                <input type="text" id="message-input" name="message" placeholder="Ask a question about your PDFs..." 
+                       class="w-full border border-gray-200 rounded-l-lg py-3 px-4 pr-10 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all" 
+                       required>
+                <div class="absolute right-3 top-3 text-gray-400 microphone-btn cursor-pointer">
+                    <i class="fas fa-microphone"></i>
+                </div>
+            </div>
+            <button type="submit" class="bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 px-6 rounded-r-lg flex items-center transition-colors">
+                <i class="fas fa-paper-plane mr-2"></i> Send
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const messageForm = document.getElementById('message-form');
+        const messageInput = document.getElementById('message-input');
+        const chatContainer = document.getElementById('chat-container');
+        
+        // Animate existing messages
+        document.querySelectorAll('.chat-message').forEach((el, index) => {
+            setTimeout(() => {
+                el.classList.remove('opacity-0');
+                el.classList.add('opacity-100');
+            }, index * 100);
+        });
+        
+        // Scroll to the bottom of the chat
+        function scrollToBottom() {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        // Scroll to bottom on load
+        scrollToBottom();
+        
+        // Focus input on page load
+        messageInput.focus();
+        
+        // Send message function
+        messageForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const message = messageInput.value.trim();
+            if (!message) return;
+            
+            // Add user message to chat
+            const userMessageElement = document.createElement('div');
+            userMessageElement.className = 'flex justify-end';
+            
+            const messageBubble = document.createElement('div');
+            messageBubble.className = 'chat-message user-message opacity-0';
+            messageBubble.innerHTML = `
+                <div class="message-content">
+                    <div class="font-bold mb-1">You</div>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            userMessageElement.appendChild(messageBubble);
+            chatContainer.appendChild(userMessageElement);
+            
+            // Animate in
+            setTimeout(() => {
+                messageBubble.classList.remove('opacity-0');
+                messageBubble.classList.add('opacity-100');
+                scrollToBottom();
+            }, 10);
+            
+            // Clear input
+            messageInput.value = '';
+            messageInput.disabled = true;
+            
+            // Show loading message
+            const loadingElement = document.createElement('div');
+            loadingElement.className = 'flex justify-start';
+            
+            const loadingBubble = document.createElement('div');
+            loadingBubble.className = 'chat-message bot-message opacity-0';
+            loadingBubble.innerHTML = `
+                <div class="message-content">
+                    <div class="font-bold mb-1">AI</div>
+                    <div class="flex items-center">
+                        <span class="mr-2">Thinking</span>
+                        <div class="loader">
+                            <span class="dot">.</span>
+                            <span class="dot">.</span>
+                            <span class="dot">.</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            loadingElement.appendChild(loadingBubble);
+            chatContainer.appendChild(loadingElement);
+            
+            // Animate in
+            setTimeout(() => {
+                loadingBubble.classList.remove('opacity-0');
+                loadingBubble.classList.add('opacity-100');
+                scrollToBottom();
+            }, 10);
+            
+            // Send to server
+            fetch(`{{ url_for('chat.send_message', chat_id=chat_session.id) }}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'message': message
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Remove loading message
+                chatContainer.removeChild(loadingElement);
+                
+                // Add AI response
+                const botMessageElement = document.createElement('div');
+                botMessageElement.className = 'flex justify-start';
+                
+                const botBubble = document.createElement('div');
+                botBubble.className = 'chat-message bot-message opacity-0';
+                botBubble.innerHTML = `
+                    <div class="message-content">
+                        <div class="font-bold mb-1">AI</div>
+                        <span>${renderMarkdown(data.message)}</span>
+                    </div>
+                `;
+                
+                botMessageElement.appendChild(botBubble);
+                chatContainer.appendChild(botMessageElement);
+                
+                // Animate in
+                setTimeout(() => {
+                    botBubble.classList.remove('opacity-0');
+                    botBubble.classList.add('opacity-100');
+                    scrollToBottom();
+                }, 10);
+                
+                // Re-enable input
+                messageInput.disabled = false;
+                messageInput.focus();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                chatContainer.removeChild(loadingElement);
+                
+                // Show error message
+                const errorElement = document.createElement('div');
+                errorElement.className = 'flex justify-start';
+                
+                const errorBubble = document.createElement('div');
+                errorBubble.className = 'chat-message bot-message opacity-0';
+                errorBubble.innerHTML = `
+                    <div class="message-content">
+                        <div class="font-bold mb-1">AI</div>
+                        <span class="text-red-500">Sorry, an error occurred. Please try again.</span>
+                    </div>
+                `;
+                
+                errorElement.appendChild(errorBubble);
+                chatContainer.appendChild(errorElement);
+                
+                // Animate in
+                setTimeout(() => {
+                    errorBubble.classList.remove('opacity-0');
+                    errorBubble.classList.add('opacity-100');
+                    scrollToBottom();
+                }, 10);
+                
+                messageInput.disabled = false;
+                messageInput.focus();
+            });
+        });
+        
+        // Optional microphone button (placeholder for future functionality)
+        const micButton = document.querySelector('.microphone-btn');
+        if (micButton) {
+            micButton.addEventListener('click', function() {
+                alert('Voice input feature coming soon!');
+                messageInput.focus();
+            });
+        }
+    });
+
+    // Function to render markdown text
+    function renderMarkdown(text) {
+        if (!text) return '';
+        
+        // Handle bold text
+        text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        
+        // Handle italic text
+        text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+        
+        // Handle code blocks
+        text = text.replace(/```(.*?)```/gs, '<pre class="bg-gray-100 p-2 rounded my-2"><code>$1</code></pre>');
+        
+        // Handle inline code
+        text = text.replace(/`(.*?)`/g, '<code class="bg-gray-100 px-1 rounded">$1</code>');
+        
+        // Handle line breaks
+        text = text.replace(/\n/g, '<br>');
+        
+        return text;
+    }
+</script>
+<style>
+    .animate-fade-in {
+        transition: opacity 0.3s ease-in-out;
+    }
+    
+    .opacity-0 {
+        opacity: 0;
+    }
+    
+    .opacity-100 {
+        opacity: 1;
+    }
+    
+    .loader {
+        display: inline-flex;
+    }
+    
+    .dot {
+        animation: loader 1.5s infinite;
+        opacity: 0;
+    }
+    
+    .dot:nth-child(1) {
+        animation-delay: 0s;
+    }
+    
+    .dot:nth-child(2) {
+        animation-delay: 0.5s;
+    }
+    
+    .dot:nth-child(3) {
+        animation-delay: 1s;
+    }
+    
+    @keyframes loader {
+        0% { opacity: 0; }
+        50% { opacity: 1; }
+        100% { opacity: 0; }
+    }
+    
+    #chat-container::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    #chat-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    
+    #chat-container::-webkit-scrollbar-thumb {
+        background: #c5c5c5;
+        border-radius: 10px;
+    }
+    
+    #chat-container::-webkit-scrollbar-thumb:hover {
+        background: #a1a1a1;
+    }
+</style>
+{% endblock %} 

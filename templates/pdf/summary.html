@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}Summary: {{ pdf.original_filename }} - PDF Chat{% endblock %}
+
+{% block content %}
+<div class="mt-6">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-primary-800">Summary: {{ pdf.original_filename }}</h1>
+        <div class="flex space-x-3">
+            <a href="{{ url_for('pdf.view_pdf', pdf_id=pdf.id) }}" class="text-primary-600 hover:text-primary-800">
+                <i class="fas fa-file-pdf mr-1"></i> View PDF
+            </a>
+            <a href="{{ url_for('pdf.dashboard') }}" class="text-primary-600 hover:text-primary-800">
+                <i class="fas fa-arrow-left mr-1"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-semibold text-primary-700">AI-Generated Summary</h2>
+            <button id="copy-summary" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-1 rounded flex items-center text-sm">
+                <i class="far fa-copy mr-1"></i> Copy
+            </button>
+        </div>
+        
+        <div class="prose max-w-none" id="summary-content">
+            {{ summary|safe }}
+        </div>
+    </div>
+
+    <div class="mt-6 flex justify-between">
+        <div>
+            <a href="{{ url_for('chat.ask_pdf_question', pdf_id=pdf.id) }}" class="bg-primary-600 hover:bg-primary-700 text-white font-bold py-2 px-4 rounded">
+                <i class="fas fa-question-circle mr-2"></i> Ask a Question
+            </a>
+        </div>
+        
+        <div class="flex space-x-2">
+            <!-- Start a new chat with this PDF -->
+            <form action="{{ url_for('chat.new_chat') }}" method="POST">
+                <input type="hidden" name="pdf_ids" value="{{ pdf.id }}">
+                <button type="submit" class="bg-primary-100 hover:bg-primary-200 text-primary-800 font-bold py-2 px-4 rounded">
+                    <i class="fas fa-comments mr-2"></i> Chat with this PDF
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const copyButton = document.getElementById('copy-summary');
+        const summaryContent = document.getElementById('summary-content');
+        
+        copyButton.addEventListener('click', function() {
+            const textToCopy = summaryContent.innerText;
+            
+            navigator.clipboard.writeText(textToCopy).then(function() {
+                // Success feedback
+                const originalText = copyButton.innerHTML;
+                copyButton.innerHTML = '<i class="fas fa-check mr-1"></i> Copied!';
+                copyButton.classList.add('bg-green-100', 'text-green-800');
+                
+                setTimeout(function() {
+                    copyButton.innerHTML = originalText;
+                    copyButton.classList.remove('bg-green-100', 'text-green-800');
+                }, 2000);
+            });
+        });
+    });
+</script>
+{% endblock %} 
