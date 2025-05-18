@@ -28,8 +28,17 @@ An AI-powered chatbot for summarizing and interacting with multiple PDF document
 
 - Python 3.8+
 - pip (Python package manager)
+- Ollama
+### Installation of Ollama jkug3-v1 model
 
-### Installation
+1. Download Ollama:
+
+2. Open cmd or powershell:
+    ```
+   ollama run b-aser/jkug3-v1
+   ```
+
+### Installation of the system
 
 1. Clone the repository:
    ```
