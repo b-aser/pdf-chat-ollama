@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+
+{% block title %}Statistics - Admin - PDF Chat{% endblock %}
+
+{% block content %}
+<div class="mt-6">
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold text-green-800">System Statistics</h1>
+        <div class="flex space-x-4">
+            <a href="{{ url_for('admin.dashboard') }}" class="text-green-600 hover:text-green-800">
+                <i class="fas fa-arrow-left mr-1"></i> Back to Dashboard
+            </a>
+            <a href="{{ url_for('admin.users') }}" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                <i class="fas fa-users mr-2"></i> Manage Users
+            </a>
+        </div>
+    </div>
+    
+    <!-- Documents per User -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h2 class="text-xl font-semibold text-green-700 mb-6">Documents per User</h2>
+        
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Username
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Document Count
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Visualization
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for username, count in user_docs %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="font-medium text-gray-900">{{ username }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-gray-900">{{ count }}</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                    {% set max_docs = user_docs|map(attribute=1)|max|default(1) %}
+                                    {% if max_docs > 0 %}
+                                    {% set percentage = (count / max_docs) * 100 %}
+                                    {% else %}
+                                        {% set percentage = 0 %}
+                                    {% endif %}
+                                    <div class="bg-green-600 h-2.5 rounded-full" style="width: {{ percentage }}%"></div>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Chats per User -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h2 class="text-xl font-semibold text-green-700 mb-6">Chat Sessions per User</h2>
+        
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Username
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Chat Count
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Visualization
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for username, count in user_chats %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="font-medium text-gray-900">{{ username }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-gray-900">{{ count }}</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                    {% set max_chats = user_chats|map(attribute=1)|max|default(1) %}
+                                    {% if max_chats > 0 %}
+                                    {% set percentage = (count / max_chats) * 100 %}
+                                    {% else %}
+                                        {% set percentage = 0 %}
+                                    {% endif %}
+                                    <div class="bg-purple-600 h-2.5 rounded-full" style="width: {{ percentage }}%"></div>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- System Info -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-semibold text-green-700 mb-6">System Information</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <h3 class="font-medium mb-3 text-gray-700">Application Info</h3>
+                <ul class="space-y-2">
+                    <li class="flex justify-between">
+                        <span class="text-gray-600">App Version:</span>
+                        <span class="font-medium">1.0.0</span>
+                    </li>
+                    <li class="flex justify-between">
+                        <span class="text-gray-600">Flask Version:</span>
+                        <span class="font-medium">2.3.3</span>
+                    </li>
+                    <li class="flex justify-between">
+                        <span class="text-gray-600">AI Model:</span>
+                        <span class="font-medium">Groq LLaMA 3 70b</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <div>
+                <h3 class="font-medium mb-3 text-gray-700">Storage</h3>
+                <ul class="space-y-2">
+                    <li class="flex justify-between">
+                        <span class="text-gray-600">Database Type:</span>
+                        <span class="font-medium">SQLite</span>
+                    </li>
+                    <li class="flex justify-between">
+                        <span class="text-gray-600">Status:</span>
+                        <span class="font-medium text-green-600">Connected</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

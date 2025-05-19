@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Register - PDF Chat{% endblock %}
+
+{% block content %}
+<div class="flex justify-center items-center mt-6">
+    <div class="w-full max-w-md">
+        <div class="bg-white shadow-lg rounded-lg px-8 pt-6 pb-8 mb-4">
+            <h2 class="text-2xl font-bold text-green-800 mb-6 text-center">Create an Account</h2>
+            
+            <form method="POST" action="{{ url_for('auth.register') }}">
+                {{ form.hidden_tag() }}
+                
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="username">
+                        Username
+                    </label>
+                    {{ form.username(class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline", id="username", placeholder="Choose a username") }}
+                    {% if form.username.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ form.username.errors[0] }}</p>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="email">
+                        Email
+                    </label>
+                    {{ form.email(class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline", id="email", placeholder="Enter your email") }}
+                    {% if form.email.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ form.email.errors[0] }}</p>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="password">
+                        Password
+                    </label>
+                    {{ form.password(class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline", id="password", placeholder="Create a strong password") }}
+                    {% if form.password.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ form.password.errors[0] }}</p>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="confirm_password">
+                        Confirm Password
+                    </label>
+                    {{ form.confirm_password(class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline", id="confirm_password", placeholder="Confirm your password") }}
+                    {% if form.confirm_password.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ form.confirm_password.errors[0] }}</p>
+                    {% endif %}
+                </div>
+                
+                <div class="flex items-center justify-between">
+                    {{ form.submit(class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full") }}
+                </div>
+            </form>
+            
+            <div class="text-center mt-6">
+                <p class="text-sm text-gray-600">
+                    Already have an account? 
+                    <a href="{{ url_for('auth.login') }}" class="text-green-600 hover:text-green-800">Log In</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

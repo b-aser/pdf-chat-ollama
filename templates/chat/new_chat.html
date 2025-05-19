@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}New Chat - PDF Chat{% endblock %}
+
+{% block content %}
+<div class="mt-6">
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold text-green-800">Start a New Chat</h1>
+        <a href="{{ url_for('pdf.dashboard') }}" class="text-green-600 hover:text-green-800">
+            <i class="fas fa-arrow-left mr-1"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-8">
+        <div class="text-center mb-8">
+            <div class="text-4xl text-green-500 mb-4">
+                <i class="fas fa-comments"></i>
+            </div>
+            <h2 class="text-2xl font-semibold text-green-800 mb-2">Select PDFs for Your Chat</h2>
+            <p class="text-gray-600">Choose one or more PDFs to chat with. You can ask questions about the selected documents.</p>
+        </div>
+
+        {% if pdfs %}
+            <form action="{{ url_for('chat.new_chat') }}" method="POST">
+                <div class="mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {% for pdf in pdfs %}
+                            <div class="border rounded-lg p-4 hover:bg-gray-50">
+                                <label class="flex items-start cursor-pointer">
+                                    <input type="checkbox" name="pdf_ids" value="{{ pdf.id }}" class="mt-1 mr-3">
+                                    <div>
+                                        <h3 class="font-medium">{{ pdf.original_filename }}</h3>
+                                        <p class="text-sm text-gray-500">Uploaded {{ pdf.upload_date.strftime('%b %d, %Y') }}</p>
+                                    </div>
+                                </label>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="flex justify-end">
+                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded">
+                        <i class="fas fa-comments mr-2"></i> Start Chat
+                    </button>
+                </div>
+            </form>
+        {% else %}
+            <div class="text-center py-8">
+                <p class="text-gray-500 mb-4">You don't have any processed PDFs yet.</p>
+                <a href="{{ url_for('pdf.upload') }}" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                    <i class="fas fa-upload mr-1"></i> Upload PDFs
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block title %}Answer - PDF Chat{% endblock %}
+
+{% block content %}
+<div class="mt-6">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-green-800">Question & Answer</h1>
+        <div class="flex space-x-3">
+            <a href="{{ url_for('chat.ask_pdf_question', pdf_id=pdf.id) }}" class="text-green-600 hover:text-green-800">
+                <i class="fas fa-question-circle mr-1"></i> Ask Another Question
+            </a>
+            <a href="{{ url_for('pdf.dashboard') }}" class="text-green-600 hover:text-green-800">
+                <i class="fas fa-arrow-left mr-1"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Main Content -->
+        <div class="lg:col-span-2">
+            <!-- Question Card -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-green-700">Your Question</h2>
+                    <span class="text-sm text-gray-500">Document: {{ pdf.original_filename }}</span>
+                </div>
+                <div class="bg-green-50 p-4 rounded-lg">
+                    <p class="text-gray-800">{{ question }}</p>
+                </div>
+            </div>
+
+            <!-- Answer Card -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-green-700">AI Answer</h2>
+                    <button id="copy-answer" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-1 rounded flex items-center text-sm">
+                        <i class="far fa-copy mr-1"></i> Copy
+                    </button>
+                </div>
+                <div class="prose max-w-none" id="answer-content">
+                    {{ answer|safe }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions Panel -->
+        <div class="lg:col-span-1">
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h2 class="text-xl font-semibold text-green-700 mb-4">Document Actions</h2>
+                
+                <div class="space-y-3">
+                    <a href="{{ url_for('pdf.view_pdf', pdf_id=pdf.id) }}" class="flex items-center p-3 rounded-lg hover:bg-gray-100 transition-all w-full">
+                        <i class="fas fa-file-pdf text-green-600 mr-3 text-lg"></i>
+                        <span>View PDF</span>
+                    </a>
+                    <a href="{{ url_for('chat.summarize_pdf', pdf_id=pdf.id) }}" class="flex items-center p-3 rounded-lg hover:bg-gray-100 transition-all w-full">
+                        <i class="fas fa-file-alt text-green-600 mr-3 text-lg"></i>
+                        <span>Get Summary</span>
+                    </a>
+                    <form action="{{ url_for('chat.new_chat') }}" method="POST" class="w-full">
+                        <input type="hidden" name="pdf_ids" value="{{ pdf.id }}">
+                        <button type="submit" class="flex items-center p-3 rounded-lg hover:bg-gray-100 transition-all w-full text-left">
+                            <i class="fas fa-comments text-green-600 mr-3 text-lg"></i>
+                            <span>Chat with this PDF</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold text-green-700 mb-4">Ask Another Question</h2>
+                
+                <form action="{{ url_for('chat.ask_pdf_question', pdf_id=pdf.id) }}" method="POST">
+                    <div class="mb-4">
+                        <textarea 
+                            name="question" 
+                            rows="3" 
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+                            placeholder="Enter a new question..."
+                            required
+                        ></textarea>
+                    </div>
+                    
+                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded w-full">
+                        <i class="fas fa-question-circle mr-2"></i> Ask Question
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const copyButton = document.getElementById('copy-answer');
+        const answerContent = document.getElementById('answer-content');
+        
+        copyButton.addEventListener('click', function() {
+            const textToCopy = answerContent.innerText;
+            
+            navigator.clipboard.writeText(textToCopy).then(function() {
+                // Success feedback
+                const originalText = copyButton.innerHTML;
+                copyButton.innerHTML = '<i class="fas fa-check mr-1"></i> Copied!';
+                copyButton.classList.add('bg-green-100', 'text-green-800');
+                
+                setTimeout(function() {
+                    copyButton.innerHTML = originalText;
+                    copyButton.classList.remove('bg-green-100', 'text-green-800');
+                }, 2000);
+            });
+        });
+    });
+</script>
+{% endblock %} 
